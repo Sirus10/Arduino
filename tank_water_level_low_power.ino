@@ -72,10 +72,10 @@ get_and_sent_water_level();
 int get_and_sent_water_level(){
 
 // INTERNAL PULL-UP DESABLING TO AVOID ELECTROLYSE 
-digitalWrite(SENSOR_LEVEL_0_PIN, HIGH); 
-digitalWrite(SENSOR_LEVEL_1_PIN, HIGH); 
-digitalWrite(SENSOR_LEVEL_2_PIN, HIGH); 
-digitalWrite(SENSOR_LEVEL_3_PIN, HIGH); 
+digitalWrite(SENSOR_LEVEL_0_PIN, LOW); 
+digitalWrite(SENSOR_LEVEL_1_PIN, LOW); 
+digitalWrite(SENSOR_LEVEL_2_PIN, LOW); 
+digitalWrite(SENSOR_LEVEL_3_PIN, LOW); 
 
 delay(100);
 /*
