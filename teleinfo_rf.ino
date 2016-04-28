@@ -3,50 +3,35 @@
 /* ainsi qu'à partir du code (+ carte électronique à relier au compteur) de M. Pascal CARDON pour la partie téléinfo 
 /* Onlinux a fourni des trames du OWL CM180 me permettant de faire les algo d'encodage (il a développer un code de décodage des trames)
 /* Je remercie les auteurs. Ci-dessous les liens vers leur site internet.
-/* ***** 04/03/2015 ******** Snips *******
 /*=======================================================================================================================
-
 ONLINUX :   Decode and parse the Oregon Scientific V3 radio data transmitted by OWL CM180 Energy sensor (433.92MHz)
 
+References : 
 http://blog.onlinux.fr
-
 https://github.com/onlinux/OWL-CMR180
-/*=======================================================================================================================
-
-
+http://domotique.web2diz.net/?p=11
+http://www.domotique-info.fr/2014/05/recuperer-teleinformation-arduino/
+http://connectingstuff.net/blog/encodage-protocoles-oregon-scientific-sur-arduino/
 /*=======================================================================================================================
 /*
  * connectingStuff, Oregon Scientific v2.1 Emitter
  * http://connectingstuff.net/blog/encodage-protocoles-oregon-scientific-sur-arduino/
  *
  * Copyright (C) 2013 olivier.lebrun@gmail.com
- 
-*/
-//=======================================================================================================================
-
-
+  * 
 /*=======================================================================================================================
                                                         my_teleinfo
                                                  (c) 2012-2013 by  
                                                   Script name : my_teleinfo
                                  http://www.domotique-info.fr/2014/05/recuperer-teleinformation-arduino/
-
- Usage :                                                                                   
-     + Arduino Teleinfo report program
-     + This program receives data frames from the EDF counter teleinfo port, it parse it,
-       validate each data group by verfying the checksum, stores it in local variables, 
-       displays the actual counter, consumption ...
-       Frame content is sent to a remote PHP server, thru Internet. The remote PHP
-       server records the received data in a MySQL data base.                                                           
-     + Runs on a Leonardo, RX on PIN 0
                                                                                                                      	  
                 VERSIONS HISTORY                                                                                                                   
 	Version 1.00	30/11/2013	+ Original version  
-	Version 1.10    03/05/2015  Manu : Small ajustment to variabilise the PIN numbers for Transmiter and Teleinfo
-						See ref here : http://domotique.web2diz.net/?p=11#
+	Version 1.10    03/05/2015      + Manu : Small ajustment to variabilise the PIN numbers for Transmiter and Teleinfo
+					See ref here : http://domotique.web2diz.net/?p=11#
 
+montage électronique conforme à http://www.domotique-info.fr/2014/05/recuperer-teleinformation-arduino/
 ======================================================================================================================*/
-// montage électronique conforme à http://www.domotique-info.fr/2014/05/recuperer-teleinformation-arduino/
 
 
 
