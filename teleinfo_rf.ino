@@ -500,6 +500,10 @@ if (teleInfoReceived)
   sendOregon(OregonMessageBuffer, sizeof(OregonMessageBuffer));    // Send the Message over RF
   mySerial->begin(1200);  //NECESSAIRE !! relance les interuptions pour la lecture du port téléinfo
    displayTeleInfo();  // console pour voir les trames téléinfo
+
+ // ajout d'un delais de 12s apres chaque trame envoyé pour eviter d'envoyer
+ // en permanence des information à domoticz et de créée des interférances   
+   delay(12000)
   }
 
 }
