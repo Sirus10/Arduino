@@ -503,7 +503,7 @@ if (teleInfoReceived)
 
  // ajout d'un delais de 12s apres chaque trame envoyé pour eviter d'envoyer
  // en permanence des information à domoticz et de créée des interférances   
-   delay(12000)
+   delay(12000);
   }
 
 }
