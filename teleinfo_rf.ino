@@ -43,9 +43,11 @@ https://github.com/onlinux/OWL-CMR180
                 VERSIONS HISTORY                                                                                                                   
 	Version 1.00	30/11/2013	+ Original version  
 	Version 1.10    03/05/2015  Manu : Small ajustment to variabilise the PIN numbers for Transmiter and Teleinfo
+						See ref here : http://domotique.web2diz.net/?p=11#
 
 ======================================================================================================================*/
 // montage électronique conforme à http://www.domotique-info.fr/2014/05/recuperer-teleinformation-arduino/
+
 
 
 #include <SoftwareSerial.h>
