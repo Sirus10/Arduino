@@ -64,7 +64,7 @@ void loop() {
 
 // If night
  while (photores < night_limit ){ 
-    if (i > 3) {
+    if (i > 5 ) { // to be sure we check during 10 sec is night is still there
       // check water 
       if (check_water()) {
         arrosage();
