@@ -35,6 +35,10 @@ int check_night_interval_min = 1;     // good value is 30 min
 float photores = 0;
 float night_limit =1.0;   // may need ajustement, 0.5 semaqs to b a better value.
 int i=0;
+int dayORnight=3;         // INITIAL Value
+int previousDayORnight=3; // INITIAL Value
+int DAY = 1;
+int NIGHT = 0;
 
 // SETUT FOR SLEEP - DO NOT CHANGE
 #ifndef cbi
@@ -53,32 +57,32 @@ x10rf myx10 = x10rf(RF_OUT_PIN,0,5);
 void setup() {
 pinMode(WATER_LEV, OUTPUT); // DEFINE WATER SENSOR as OUTPUT TO USE INTERNAL PULL-UP 
 pinMode(RELAY, OUTPUT);     
-digitalWrite(RELAY, HIGH);
 setup_watchdog(9);
 myx10.begin(); 
 }
 
 void loop() {  
+  
 // Read Analog value from photoresistor
-  photores = 5.00 * (analogRead(PHOTO_RES) / 1023.00); 
+photores = 5.00 * (analogRead(PHOTO_RES) / 1023.00); 
+if(photores < night_limit ){ // IF NIGHT
+  dayORnight = NIGHT ;
+}
+else { // IF DAY
+  dayORnight = DAY;
+}
 
-// If night
- while (photores < night_limit ){ 
-    if (i > 5 ) { // to be sure we check during 10 sec is night is still there
-      // check water 
-      if (check_water()) {
-        arrosage();
-        system_sleep_min(minimum_between_watering_min);
-      i=0;
-      }
-    }
-  photores = 5.00 * (analogRead(PHOTO_RES) / 1023.00) ;
-  delay(1000);  
-  i++; 
-  }
+// START WATERING only is status = night and previous check was day
+if (dayORnight == 0 &&  previousDayORnight == 1 && check_water() ){
+  arrosage();
+}
+
 
 // If not yet night, then Sleep before next check
-system_sleep_min(check_night_interval_min);
+
+previousDayORnight = dayORnight;
+system_sleep_min(60);//sleep 1h with power saving
+
 } 
 
 
@@ -132,7 +136,7 @@ void system_sleep() {
   sleep_enable();
   sleep_mode();                        // System sleeps here
   sleep_disable();                     // System continues execution here when watchdog timed out 
- // sbi(ADCSRA,ADEN);                    // switch Analog to Digitalconverter ON
+  sbi(ADCSRA,ADEN);                    // switch Analog to Digitalconverter ON
 }
 
 // 0=16ms, 1=32ms,2=64ms,3=128ms,4=250ms,5=500ms
