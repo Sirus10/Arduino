@@ -27,8 +27,7 @@
 
 // SETUP START
 int watering_duration_sec = 20;       // duration of watering active (sec)
-int minimum_between_watering_min = 2; // good value is 600 = 10h to avoid multiple watering per night 
-int check_night_interval_min = 1;     // good value is 30 min
+int check_night_interval_min = 1;     // good value is 60  = 1h min
 // SETUP END
 
 // VARIABLE 
@@ -65,14 +64,14 @@ void loop() {
   
 // Read Analog value from photoresistor
 photores = 5.00 * (analogRead(PHOTO_RES) / 1023.00); 
-if(photores < night_limit ){ // IF NIGHT
+
+if(photores < night_limit ){ 
   dayORnight = NIGHT ;
 }
-else { // IF DAY
+else {
   dayORnight = DAY;
 }
 
-// START WATERING only is status = night and previous check was day
 if (dayORnight == 0 &&  previousDayORnight == 1 && check_water() ){
   arrosage();
 }
@@ -81,7 +80,7 @@ if (dayORnight == 0 &&  previousDayORnight == 1 && check_water() ){
 // If not yet night, then Sleep before next check
 
 previousDayORnight = dayORnight;
-system_sleep_min(60);//sleep 1h with power saving
+system_sleep_min(check_night_interval_min);//sleep 1h with power saving
 
 } 
 
