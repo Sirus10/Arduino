@@ -41,22 +41,23 @@
 /**
   VARIABLES
 **/
-double volt = 0;						// valeur tention batterie
-double minimum_battery = 12;			// niveau mini batterie pour fonctionner (en volt)
-int duree_arrosage_min = 5;				// durée d'arrosage en min 
-long count = 0;							// simple compteur envois de temp
-double temp = 0;						// variable pour temperature
-int minute_entre_envoie_donnee = 8;		// temps entre 2 envois rf  def = 8min
-int sleep_min = 10;						// temps de sleep si baterrie faible  default 20min
+double volt = 0;            // valeur tention batterie
+double minimum_battery = 12;      // niveau mini batterie pour fonctionner (en volt)
+int duree_arrosage_min = 5;       // durée d'arrosage en min 
+long count = 0;             // simple compteur envois de temps
+double temp = 0;            // variable pour temperature
+int minute_entre_envoie_donnee = 1;   // temps entre 2 envois rf  def = 8min
+int sleep_min = 5;           // temps de sleep si baterrie faible  default 20min
 
-int ChanelTemp = 0xCA;      			// Chanel pour Temp
-int ChanelBat =  0xBE;					// Chanel pour Volt Bat. 
-int niveau_cuve=0; 						// Variable pour niveau cuve
+
+int ChanelTemp = 0xCA;            // Chanel pour Temp
+int ChanelBat =  0xBE;          // Chanel pour Volt Bat. 
+int niveau_cuve=1;            // Variable pour niveau cuve, par defaut on ne s'en occupe pas... 
 
 /**
   ACTIVATION MYX10
 **/
-x10rf myx10 = x10rf(RF_OUT,0,5);		
+x10rf myx10 = x10rf(RF_OUT,0,5);    
 RCSwitch mySwitch = RCSwitch();
 /**
   ACTIVATION ONEWIRE 
@@ -88,111 +89,136 @@ const unsigned long TWOTIME = TIME*2;
     MAIN SETUP
 **/
 void setup() {
+
 // OREGON SETUP
 SEND_LOW();       //On initialise le capteur de temperature
 sensors.begin();  //On initialise le capteur de temperature
 
 // OTHER SETUP  
 Serial.begin(9600);
-myx10.begin();          		// For water level
-mySwitch.enableReceive(0);  	// Receiver on inerrupt 0 => that is pin #2
-pinMode(POMPE_PIN, OUTPUT);		
-digitalWrite(POMPE_PIN, HIGH); 	
+  Serial.println("## STARTUP... ");
+myx10.begin();                 // For water level
+mySwitch.enableReceive(0);    // Receiver on inerrupt 0 => that is pin #2
+pinMode(POMPE_PIN, OUTPUT);   
+digitalWrite(POMPE_PIN, HIGH);  
+
+
+// Display config 
+ //get_water_level();
+   Serial.println("##");
+   Serial.println("## SETUP START : ");
+   Serial.print(" Sleep in case of low battery (min) : ");
+   Serial.println(sleep_min);
+   Serial.print(" Sent data frequency (min) :  ");
+   Serial.println(minute_entre_envoie_donnee);
+   Serial.print(" Watering max duration (min) :   ");
+   Serial.println(duree_arrosage_min);
+   Serial.print(" Batterie low level warning (V) :   ");
+   Serial.println(minimum_battery);
+
 
 // Fisrt sent data at startup
- get_and_send_temp();
- get_and_send_battery_level();
- get_water_level();
+   Serial.println("## First sent data at startup ");
+   get_and_send_temp();
+   get_and_send_battery_level();
+
+   Serial.println("## SETUP ENDS... ");
+   Serial.println("##");
+   Serial.println("Listening for incoming RF now...");
 }
 
 /**
     MAIN LOOP
 */
 void loop(){
-	
+
    if (digitalRead(BOUTON) == HIGH ){       // demarrage manuel 
     Serial.println("## Arrosage manuel");  
     start_arrosage();
     }
-    if (mySwitch.available()) {         	// detection d'un message RF 
+    if (mySwitch.available()) {           // detection d'un message RF 
     int value = mySwitch.getReceivedValue();
-    if (value == 0) {						// message RF incorrect
-      Serial.print("Unknown encoding");		
+    if (value == 0) {           // message RF incorrect
+      Serial.print("Unknown encoding");   
     } 
-   else {									// message RF correct
-		Serial.print("received_id: ");
-		Serial.println( mySwitch.getReceivedValue() );
+   else {                 // message RF correct
+    Serial.print("received_id: ");
+    Serial.println( mySwitch.getReceivedValue() );
 
-		if ( mySwitch.getReceivedValue()==279573 ){	// reception message RF pour demarrage Arrosage
-		  Serial.println("## Arrosage Commande");  
-		  start_arrosage();        
-		}
-		if ( mySwitch.getReceivedValue()==4211733){ // reception message RF niveau cuve
-		  Serial.println("## Niveau cuve 0");  
-		  niveau_cuve= 0;
-		}
-		if ( mySwitch.getReceivedValue()==4194325){ // reception message RF niveau cuve
-		  Serial.println("## Niveau cuve 1");  
-		  niveau_cuve= 1;
-		}
-		if ( mySwitch.getReceivedValue()==4210709){	// reception message RF niveau cuve
-		  Serial.println("## Niveau cuve 2");  
-		  niveau_cuve= 2;
-		  }
-		if ( mySwitch.getReceivedValue()==4198421){	// reception message RF niveau cuve
-		  Serial.println("## Niveau cuve 3");  
-		  niveau_cuve= 3;
-		}
-		if ( mySwitch.getReceivedValue()==4214805){	// reception message RF niveau cuve
-		  Serial.println("## Niveau cuve 4");  
-		  niveau_cuve= 4;
-		}
-		  
-		else{
-		  Serial.print("received_id: ");				// reception message RF autre
-		  Serial.print( mySwitch.getReceivedValue() );
-		  Serial.print(" but not action associated ");
-		}
+    if ( mySwitch.getReceivedValue()==279573 or mySwitch.getReceivedValue()==331797){ // reception message RF pour demarrage Arrosage
+      Serial.println("## Arrosage Commande ON");  
+      start_arrosage();        
+    }
+    else if ( mySwitch.getReceivedValue()==279572 or mySwitch.getReceivedValue()==331796){ // reception message RF pour Arret Arrosage
+      Serial.println("## Arrosage Commande OFF");  
+     // stop arrosage
+    }
+/*    else if ( mySwitch.getReceivedValue()==4211733){ // reception message RF niveau cuve
+      Serial.println("## Niveau cuve 0");  
+      niveau_cuve= 0;
+    }
+    else if ( mySwitch.getReceivedValue()==4194325){ // reception message RF niveau cuve
+      Serial.println("## Niveau cuve 1");  
+      niveau_cuve= 1;
+    }
+    else if ( mySwitch.getReceivedValue()==4210709){ // reception message RF niveau cuve
+      Serial.println("## Niveau cuve 2");  
+      niveau_cuve= 2;
+      }
+    else if ( mySwitch.getReceivedValue()==4198421){ // reception message RF niveau cuve
+      Serial.println("## Niveau cuve 3");  
+      niveau_cuve= 3;
+    }
+   else if ( mySwitch.getReceivedValue()==4214805){ // reception message RF niveau cuve
+      Serial.println("## Niveau cuve 4");  
+      niveau_cuve= 4;
+    } */
+      
+    else{
+      Serial.print("received_id: ");        // reception message RF autre
+      Serial.print( mySwitch.getReceivedValue() );
+      Serial.print(" but not action associated ");
+    }
     }
       mySwitch.resetAvailable();
   }
   
-  
-if (count > double ((minute_entre_envoie_donnee-sleep_min)*60000)){ // Toutes les X min
+              
+if (count > double ((minute_entre_envoie_donnee)*60000) ){ // Toutes les X min
        Serial.println("SEND ALL DATA ");          
-       get_and_send_temp();					// Envois temperature
+       get_and_send_temp();               // Envois temperature
        delay(100);
-       get_and_send_battery_level();    	// Envois niveau batterie
+       get_and_send_battery_level();      // Envois niveau batterie sleep si trop bas... 
        delay(100);
-  
-	if ( volt > minimum_battery) { 			// Si  le niveau de la batterie est suffisant on continue  
-	  sleep_min = 0;
-		Serial.print("Not sleeping, listening incoming RF ");
-	   }
-	else{             						// Si  le niveau de la batterie est faible on lance la mise en veille  
-		sleep_min = 2;
-		Serial.print("START Sleeping for (min) ");  
-		Serial.println(sleep_min);  
-		delay (100);
-		mySwitch.disableReceive();  	// Receiver on inerrupt 0 => that is pin #2
-		delay (100);
-		for (int i=0; i< round(sleep_min*60/8); i++){
-			// Sleep for 8 s with ADC module and BOD module off
-			LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);  
-		}
-		delay (100);
-		mySwitch.enableReceive(0); 	 		// Receiver on inerrupt 0 => that is pin #2
-		Serial.println("END Sleeping");   	// Reveil à la fin de la veille
-	}
 
-count=0;  	// on remet le compteur à 0
+count=0;    // on remet le compteur à 0
 }
 delay(1);
-count++;	
+count++;  
 }
 ////////////////////////////////////////////
 //           LOOP ENDS
 ///////////////////////////////////////////
+
+
+/**
+ * FUNCTION
+ * Sleep 
+ */
+int sleep( int minute){
+    Serial.print("START Sleeping for (min) ");  
+    Serial.println(minute);  
+    delay (100);
+    mySwitch.disableReceive();    // Receiver on inerrupt 0 => that is pin #2
+    delay (100);
+    for (int i=0; i< round(minute*60/8); i++){
+      // Sleep for 8 s with ADC module and BOD module off
+      LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);  
+    }
+    delay (100);
+    mySwitch.enableReceive(0);      // Receiver on inerrupt 0 => that is pin #2
+    Serial.println("END Sleeping");     // Reveil à la fin de la veille
+}
 
 /**
       FUNCTION
@@ -201,15 +227,24 @@ count++;
 double get_and_send_temp(){   
      //Lancement de la commande de récuperation de la temperature
          sensors.requestTemperatures();
+         int testtime=0;
          temp = sensors.getTempCByIndex(0);
-          while(temp > 100.00 || temp < -40.00){
+          while(temp > 100.00 || temp < -40.00 and testtime < 10){
              sensors.requestTemperatures();
              temp = sensors.getTempCByIndex(0);
+             testtime ++;
+             delay(1);
            }
-         sent_oregon(ChanelTemp, temp ); 
+         if(temp > 100.00 || temp < -40.00){
+          Serial.print("Temp read not valid, I will not sent it  : ");
+          Serial.println( temp); 
+         }
+         else {
+            sent_oregon(ChanelTemp, temp ); 
+            Serial.print("Temp Sent  : ");
+            Serial.println( temp);
+         }
          delay(10);
-         Serial.print("Temp Sent  : ");
-         Serial.println( temp); 
 return temp;
 }
 /**
@@ -225,8 +260,14 @@ double  get_and_send_battery_level(){
   ADCSRA &= ~ bit(ADEN); bitSet(PRR, PRADC); // Disable the ADC to save power
  Serial.print("Volt Sent  : ");
  Serial.println(volt);
- sent_oregon(ChanelBat,volt ); 		// Sent voltage
- return volt;
+ sent_oregon(ChanelBat,volt );    // Sent voltage
+
+  if ( volt < minimum_battery) {      // Si  le niveau de la batterie est suffisant on continue  
+    Serial.println("I need to sleep now baterie level is low");
+    sleep( sleep_min);
+    get_and_send_battery_level();
+  }
+  return volt;
 }
 
 
@@ -236,15 +277,16 @@ double  get_and_send_battery_level(){
       start_arrosage
 **/
 int start_arrosage(){
+
 // Check Batterie level
    Serial.print("Niveau de charge de la batterie : ");          
    Serial.print( get_and_send_battery_level());   
    Serial.println ("V");       
-   if ( volt < minimum_battery ){		// si niveai batterie trop bas 
+   if ( volt < minimum_battery ){   // si niveau batterie trop bas 
      Serial.println( " -> Le Niveau de la batterie est trop bas" );   
      Serial.println( " -> Pas d'arrosage aujourd'hui" );        
      Serial.println( "EXIT"); 
-     return 0;							// exit, batterie trop bas
+     return 0;              // exit, batterie trop bas
    }
    else {
       Serial.println( " -> Niveau Bat OK" );  
@@ -253,42 +295,47 @@ int start_arrosage(){
    Serial.print("Capteur de niveau d'eau : ");  
    Serial.print("Niveau cuve = " );   
    Serial.println( niveau_cuve);   
-  if( niveau_cuve  == 0  ){ 			// si niveau cuve trop bas 
+  if( niveau_cuve  == 0  ){       // si niveau cuve trop bas 
      Serial.println( " -> Le Niveau de la cuve est trop bas" );   
      Serial.println( " -> Pas d'arrosage aujourd'hui" );        
      Serial.println( "EXIT"); 
-     return 0;  						// exit, niveau cuve trop bas
+     return 0;              // exit, niveau cuve trop bas
   }
   else {
       Serial.println( " -> Niveau cuve OK" );   
   }
-// BAtterie and water level OK we can start											
-  Serial.print("   Debut Arroage pour  ");  	
+// BAtterie and water level OK we can start                     
+  Serial.print("   Debut Arroage pour  ");    
   Serial.print(duree_arrosage_min);  
   Serial.println(" minutes");  
 
-  delay(3000);
-  myx10.x10Switch('D',4, ON);  			// Envois de l'information a domoticz,, pompe allumée
-  delay (1000);
-  count=0;								// compteur de temps remis a 0
-  // Tant que on ne presse pas le bouton, que la durée d'arrosage n'est pas fini et que le niveau d'eau est OK 
-  while(digitalRead(BOUTON) ==  LOW && count < long (duree_arrosage_min*60*10) && niveau_cuve > 0  ){ 
-    digitalWrite(POMPE_PIN, LOW);		// allumage de la pompe
+  delay(500);
+  myx10.x10Switch('D',4, ON);       // Envois de l'information a domoticz, pompe allumée
+  delay (500);
+  count=0;                // compteur de temps remis a 0
+  // Tant que on ne presse pas le bouton, que la durée d'arrosage n'est pas fini et que le niveau d'eau est OK . 
+  // Pour arreter avant le temps prevu : stop via 279572 (domoticz) ou 331796 (télécomande)
+  while(digitalRead(BOUTON) ==  LOW && count < long (duree_arrosage_min*60*10) && niveau_cuve > 0 && mySwitch.getReceivedValue()!=279572 && mySwitch.getReceivedValue()!=331796 ){ 
+    digitalWrite(POMPE_PIN, LOW);   // allumage de la pompe
     Serial.println("   ARROSAGE EN COURS"); 
      Serial.println(count );   
           Serial.println( long (duree_arrosage_min*60*10)  );   
-    delay(100);							// On incrémente le compteur de temps
+    delay(100);             // On incrémente le compteur de temps
     count ++;
   }   
-  Serial.println("### FIN de l'arrosage ###");  
-  
-  digitalWrite(POMPE_PIN, HIGH);		// Arret de la pompe
-  myx10.x10Switch('D',4, OFF); 			// Envois de l'information a domoticz,, pompe arretée
+  Serial.print("### FIN de l'arrosage ### ");
+
+  digitalWrite(POMPE_PIN, HIGH);    // Arret de la pompe
+  myx10.x10Switch('D',4, OFF);      // Envois de l'information a domoticz, pompe arretée
  
   delay(1000);
-  count =0;								// compteur de temps remis a 0
+  count =0;               // compteur de temps remis a 0
 
 }
+
+
+
+
 /**
       FUNCTION
       get_water_level
@@ -488,6 +535,3 @@ void calculateAndSetChecksum(byte* data)
  /***************************************
  * OREGON FUNCTION END
  ****************************************/
-
-
-
